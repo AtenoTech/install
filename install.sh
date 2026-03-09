@@ -1,14 +1,19 @@
 #!/bin/bash
-# install.sh - Central installer for Ateno
-echo "Initializing Ateno Spatial Design Environment..."
-
-# Example: Check if it's a Mac or Linux
+# Detect OS and Architecture (Standard for high-performance 3D tools)
 OS="$(uname -s)"
-if [ "$OS" == "Darwin" ]; then
-    echo "Installing for macOS..."
-    # You could trigger your Homebrew install here automatically
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/AtenoTech/homebrew-ateno/main/install_logic.sh)"
+ARCH="$(uname -m)"
+
+if [[ "$OS" == "Darwin" ]]; then
+    # Use Homebrew if they have it; it's cleaner for Mac users
+    if command -v brew &> /dev/null; then
+        echo "Installing via Homebrew..."
+        brew tap AtenoTech/ateno
+        brew install ateno
+    else
+        echo "Installing standalone binary for macOS..."
+        # Logic to download binary and move to /usr/local/bin
+    fi
 else
     echo "Installing for Linux..."
-    # Linux-specific commands
+    # Linux logic here
 fi
