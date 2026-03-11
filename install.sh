@@ -13,7 +13,7 @@ echo "🚀 Initializing Ateno Spatial Design Environment..."
 # 1. Detect OS
 OS="$(uname -s)"
 if [[ "$OS" != "Darwin" && "$OS" != "Linux" ]]; then
-    echo "❌ This script is for macOS or Linux. For Windows, use https://ateno.co/win"
+    echo "❌ This script is for macOS or Linux. For Windows, use: iex (iwr ateno.co/win).Content"
     exit 1
 fi
 
@@ -24,39 +24,72 @@ if ! command -v brew &> /dev/null; then
     eval "$(/opt/homebrew/bin/brew shellenv)" || eval "$(/usr/local/bin/brew shellenv)"
 fi
 
-# 3. Interactive Choice
+# 3. Interactive Multi-Select Menu
 echo "------------------------------------------------"
-echo "Which Ateno SDKs would you like to install?"
-echo "1) 📦 Both (Python & JS) - Recommended"
-echo "2) 🐍 Python only (ateno)"
-echo "3) ⚡ JavaScript only (ateno-js)"
+echo "Which Ateno tools would you like to install?"
+echo "Enter numbers separated by spaces (e.g., '2 4 5')"
+echo ""
+echo "1) 🌐 Full Suite (Installs all applicable tools below)"
+echo "2) 💻 CLI Tools (ateno & ateno-js via Homebrew)"
+echo "3) 🐍 Python SDK (ateno via pip)"
+echo "4) ⚛️ React UI (@atenotech/react via npm)"
+echo "5) 📱 Flutter UI (ateno_flutter via pub)"
 echo "------------------------------------------------"
 
-# Use /dev/tty to ensure it works with curl | bash
-read -p "Select an option [1-3]: " choice < /dev/tty
+read -p "Select options [Default: 1]: " input_choices < /dev/tty
+input_choices=${input_choices:-1}
 
-brew tap Atenotech/ateno-homebrew --quiet
+# Initialize flags
+INSTALL_CLI=false
+INSTALL_PY=false
+INSTALL_REACT=false
+INSTALL_FLUTTER=false
 
-# 4. Installation and dynamic instruction prep
-case $choice in
-    2)
-        echo "🐍 Fetching Ateno Python SDK..."
-        brew install ateno
-        INSTRUCTIONS="Run 'ateno --version' to begin."
-        ;;
-    3)
-        echo "⚡ Fetching Ateno JavaScript SDK..."
-        brew install ateno-js
-        INSTRUCTIONS="Run 'ateno-js --version' to begin."
-        ;;
-    *)
-        echo "📦 Fetching both SDKs..."
-        brew install ateno ateno-js
-        INSTRUCTIONS="Run 'ateno --version' or 'ateno-js --version' to begin."
-        ;;
-esac
+# Parse choices
+for choice in $input_choices; do
+    case $choice in
+        1) INSTALL_CLI=true; INSTALL_PY=true; INSTALL_REACT=true; INSTALL_FLUTTER=true ;;
+        2) INSTALL_CLI=true ;;
+        3) INSTALL_PY=true ;;
+        4) INSTALL_REACT=true ;;
+        5) INSTALL_FLUTTER=true ;;
+    esac
+done
+
+INSTRUCTIONS=""
+
+# 4. Execution
+if [ "$INSTALL_CLI" = true ]; then
+    echo "💻 Installing CLI Tools..."
+    brew tap Atenotech/ateno-homebrew --quiet
+    brew install ateno ateno-js
+    INSTRUCTIONS="$INSTRUCTIONS\n- CLI: Run 'ateno --version' or 'ateno-js --version'"
+fi
+
+if [ "$INSTALL_PY" = true ]; then
+    echo "🐍 Installing Python SDK..."
+    pip install ateno
+    INSTRUCTIONS="$INSTRUCTIONS\n- Python: Import 'ateno' in your environment"
+fi
+
+if [ "$INSTALL_REACT" = true ]; then
+    echo "⚛️ Installing React UI Components..."
+    npm install -g @atenotech/react
+    INSTRUCTIONS="$INSTRUCTIONS\n- React: Import { AtenoViewer } from '@atenotech/react'"
+fi
+
+if [ "$INSTALL_FLUTTER" = true ]; then
+    echo "📱 Evaluating Flutter environment..."
+    if command -v flutter &> /dev/null && [ -f "pubspec.yaml" ]; then
+        echo "Adding ateno_flutter to project..."
+        flutter pub add ateno_flutter
+        INSTRUCTIONS="$INSTRUCTIONS\n- Flutter: Added 'ateno_flutter' to your pubspec.yaml"
+    else
+        echo "⏭️  Skipped Flutter UI (Command not run inside a Flutter project with a pubspec.yaml)"
+    fi
+fi
 
 echo "------------------------------------------------"
-echo "✅ Success! Ateno is now globally available."
-echo "👉 $INSTRUCTIONS"
+echo "✅ Ateno setup complete!"
+echo -e "$INSTRUCTIONS"
 echo "------------------------------------------------"
